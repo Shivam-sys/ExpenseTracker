@@ -1,59 +1,66 @@
 import { create } from 'zustand';
-import {
-  BASE_CATEGORIES,
-  CategoryDef,
-  NEW_CATEGORY_COLOR_POOL,
-} from '../theme/tokens';
-import { Expense, ExpenseDraft } from './types';
+import { CategoryDef, NEW_CATEGORY_COLOR_POOL } from '../theme/tokens';
+import { Expense } from './types';
 
 /**
- * Raw client-side data container. This is the ONLY place that owns expense
- * state. UI never touches it directly — it goes through `useExpenses()`, so a
- * real API/persistence layer can replace the internals here (or the hook)
- * without any screen change.
+ * Client-side state container. Expense rows mirror the Supabase `expenses`
+ * table (ids are server-assigned); mutations happen in useExpenses(), which
+ * owns the network calls — the store just holds state so this file stays
+ * transport-agnostic.
  */
 interface ExpenseState {
   entries: Expense[];
+  /** true while the initial GET is in flight */
+  isLoading: boolean;
+  /** the initial GET has completed at least once (success or failure) */
+  hasLoaded: boolean;
+  /** last initial GET failed — list shows retry affordance */
+  loadFailed: boolean;
+  /** last request failed like a network drop — shows the offline pill */
+  offline: boolean;
+  /** label of an entry re-inserted after a failed DELETE (drives the toast) */
+  restoredLabel: string | null;
+
   customCategories: CategoryDef[];
   currency: string;
   darkMode: boolean;
-  nextId: number;
 
-  addEntry: (draft: ExpenseDraft) => Expense;
-  updateEntry: (id: number, draft: ExpenseDraft) => void;
+  setEntries: (entries: Expense[]) => void;
+  insertEntry: (entry: Expense) => void;
+  replaceEntry: (id: number, entry: Expense) => void;
   removeEntry: (id: number) => void;
+  setLoading: (v: boolean) => void;
+  setLoadResult: (ok: boolean) => void;
+  setOffline: (v: boolean) => void;
+  setRestoredLabel: (label: string | null) => void;
+
   addCategory: (label: string) => CategoryDef;
   setCurrency: (code: string) => void;
   toggleDarkMode: () => void;
 }
 
-const SEED: Expense[] = [
-  { id: 1, label: 'Coffee', categoryId: 'coffee', amount: 4.5, dayOffset: 0 },
-  { id: 2, label: 'Lunch', categoryId: 'food', amount: 12.0, dayOffset: 0 },
-  { id: 3, label: 'Transit', categoryId: 'transit', amount: 2.75, dayOffset: 1 },
-];
-
 export const useExpenseStore = create<ExpenseState>((set, get) => ({
-  entries: SEED,
+  entries: [],
+  isLoading: false,
+  hasLoaded: false,
+  loadFailed: false,
+  offline: false,
+  restoredLabel: null,
+
   customCategories: [],
-  currency: 'USD',
+  currency: 'INR',
   darkMode: false,
-  nextId: 4,
 
-  addEntry: draft => {
-    const id = get().nextId;
-    const entry: Expense = { id, ...draft };
-    set(s => ({ entries: [...s.entries, entry], nextId: s.nextId + 1 }));
-    return entry;
-  },
-
-  updateEntry: (id, draft) =>
-    set(s => ({
-      entries: s.entries.map(e => (e.id === id ? { ...e, ...draft } : e)),
-    })),
-
+  setEntries: entries => set({ entries }),
+  insertEntry: entry => set(s => ({ entries: [...s.entries, entry] })),
+  replaceEntry: (id, entry) =>
+    set(s => ({ entries: s.entries.map(e => (e.id === id ? entry : e)) })),
   removeEntry: id =>
     set(s => ({ entries: s.entries.filter(e => e.id !== id) })),
+  setLoading: v => set({ isLoading: v }),
+  setLoadResult: ok => set({ hasLoaded: true, loadFailed: !ok }),
+  setOffline: v => set({ offline: v }),
+  setRestoredLabel: label => set({ restoredLabel: label }),
 
   addCategory: label => {
     const { customCategories } = get();
@@ -75,8 +82,3 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
   setCurrency: code => set({ currency: code }),
   toggleDarkMode: () => set(s => ({ darkMode: !s.darkMode })),
 }));
-
-/** All categories (built-in + user-created). */
-export function selectAllCategories(s: ExpenseState): CategoryDef[] {
-  return [...BASE_CATEGORIES, ...s.customCategories];
-}

@@ -1,11 +1,13 @@
 import React, { useRef } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HeaderGradient } from '../components/HeaderGradient';
 import { ExpenseRow } from '../components/ExpenseRow';
@@ -18,14 +20,25 @@ import {
 import { useExpenses } from '../hooks/useExpenses';
 import { useTheme } from '../theme/useTheme';
 import { splitMoney, money } from '../lib/format';
-import { font } from '../theme/tokens';
+import { BRAND, DELETE_RED, font } from '../theme/tokens';
 
 export function ExpensesListScreen({ navigation }: { navigation: any }) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const sheetRef = useRef<AddExpenseSheetHandle>(null);
-  const { dayGroups, monthTotal, todayTotal, currency, isEmpty, deleteExpense } =
-    useExpenses();
+  const {
+    dayGroups,
+    monthTotal,
+    todayTotal,
+    currency,
+    isEmpty,
+    deleteExpense,
+    isLoading,
+    loadFailed,
+    isOffline,
+    restoredLabel,
+    retryLoad,
+  } = useExpenses();
 
   const today = splitMoney(todayTotal, currency);
 
@@ -70,8 +83,26 @@ export function ExpensesListScreen({ navigation }: { navigation: any }) {
             { paddingBottom: insets.bottom + 100 },
           ]}
           showsVerticalScrollIndicator={false}>
-          {isEmpty ? (
-            <EmptyState theme={theme} />
+          {loadFailed && (
+            <View
+              style={[
+                styles.retryBanner,
+                { backgroundColor: theme.cardBg, borderColor: theme.cardBorder },
+              ]}>
+              <Text style={[styles.retryText, { color: theme.textMuted55 }]}>
+                Couldn't load expenses.
+              </Text>
+              <Pressable onPress={retryLoad} hitSlop={8}>
+                <Text style={styles.retryAction}>Retry</Text>
+              </Pressable>
+            </View>
+          )}
+          {isLoading && isEmpty ? (
+            <View style={styles.loading}>
+              <ActivityIndicator color={BRAND} />
+            </View>
+          ) : isEmpty ? (
+            !loadFailed && <EmptyState theme={theme} />
           ) : (
             dayGroups.map(group => (
               <View key={group.offset}>
@@ -101,6 +132,31 @@ export function ExpensesListScreen({ navigation }: { navigation: any }) {
           )}
         </ScrollView>
       </View>
+
+      {isOffline && (
+        <View style={[styles.offlinePill, { top: insets.top + 8 }]}>
+          <View style={styles.offlineDot} />
+          <Text style={styles.offlineText}>Offline</Text>
+        </View>
+      )}
+
+      {restoredLabel != null && (
+        <Animated.View
+          entering={FadeInDown.duration(200)}
+          exiting={FadeOut.duration(200)}
+          style={[
+            styles.restoredToast,
+            {
+              bottom: insets.bottom + 100,
+              backgroundColor: theme.cardBg,
+              borderColor: theme.cardBorder,
+            },
+          ]}>
+          <Text style={[styles.restoredText, { color: theme.text }]}>
+            "{restoredLabel}" restored — delete failed
+          </Text>
+        </Animated.View>
+      )}
 
       <Fab onPress={() => sheetRef.current?.presentAdd()} />
 
@@ -211,5 +267,69 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: 'hidden',
     marginBottom: 30,
+  },
+  loading: {
+    paddingVertical: 48,
+    alignItems: 'center',
+  },
+  retryBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 18,
+  },
+  retryText: {
+    fontSize: 13.5,
+    fontFamily: font(500),
+  },
+  retryAction: {
+    fontSize: 13.5,
+    fontFamily: font(600),
+    color: BRAND,
+  },
+  offlinePill: {
+    position: 'absolute',
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(20,18,15,.75)',
+    borderRadius: 999,
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    zIndex: 20,
+  },
+  offlineDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: DELETE_RED,
+  },
+  offlineText: {
+    color: '#fff',
+    fontSize: 12,
+    fontFamily: font(600),
+  },
+  restoredToast: {
+    position: 'absolute',
+    alignSelf: 'center',
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingVertical: 9,
+    paddingHorizontal: 16,
+    zIndex: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  restoredText: {
+    fontSize: 13,
+    fontFamily: font(500),
   },
 });
