@@ -24,6 +24,7 @@ import {
   font,
   hexToRgba,
 } from '../theme/tokens';
+import { getCategoryConfig } from '../theme/categories';
 
 interface Props {
   categories: CategoryDef[];
@@ -131,6 +132,7 @@ function Pill({
   const sel = useSharedValue(selected ? 1 : 0);
   const scale = useSharedValue(1);
 
+  const { icon: CategoryGlyph, iconColor } = getCategoryConfig(cat.id);
   const activeBg = hexToRgba(cat.color, theme.dark ? 0.24 : 0.12);
   const inactiveBorder = theme.dark ? theme.border : cat.border;
 
@@ -164,7 +166,7 @@ function Pill({
   return (
     <Pressable onPress={onPress} style={styles.hit}>
       <Animated.View style={[styles.pill, pillStyle]}>
-        <View style={[styles.dot, { backgroundColor: cat.color }]} />
+        <CategoryGlyph size={16} color={iconColor} />
         <Text style={[styles.pillLabel, { color: theme.text }]}>{cat.label}</Text>
       </Animated.View>
     </Pressable>
@@ -202,11 +204,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     paddingVertical: 6,
     paddingHorizontal: 12,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
   },
   pillLabel: {
     fontSize: 13.5,

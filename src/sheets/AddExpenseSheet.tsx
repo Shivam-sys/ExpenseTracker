@@ -1,18 +1,17 @@
-import React, {
-  forwardRef,
-  useCallback,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetView,
   useBottomSheetTimingConfigs,
 } from '@gorhom/bottom-sheet';
+import React, {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useRef,
+  useState
+} from 'react';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -20,33 +19,26 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { AmountDisplay } from '../components/AmountDisplay';
+import { TrashIcon } from '../components/CategoryIcon';
 import { CategoryPills } from '../components/CategoryPills';
 import { DateStepper } from '../components/DateStepper';
 import { Keypad } from '../components/Keypad';
-import { TrashIcon } from '../components/CategoryIcon';
-import { useExpenses, DisplayExpense } from '../hooks/useExpenses';
+import { DisplayExpense, useExpenses } from '../hooks/useExpenses';
 import { useHaptics } from '../hooks/useHaptics';
-import { useTheme } from '../theme/useTheme';
+import { dayOffsetLabel } from '../lib/format';
 import {
   BRAND,
-  BUILTIN_ICON_IDS,
   DELETE_RED,
   DURATIONS,
   EASE,
   RADIUS,
   font,
 } from '../theme/tokens';
-import { DATE_LABELS } from '../store/types';
+import { useTheme } from '../theme/useTheme';
 
 export interface AddExpenseSheetHandle {
   presentAdd: () => void;
   presentEdit: (entry: DisplayExpense) => void;
-}
-
-const MAX_PAST_OFFSET = DATE_LABELS.length - 1; // Today … 2 days ago
-
-function dateLabel(offset: number) {
-  return DATE_LABELS[offset] ?? `${offset} days ago`;
 }
 
 export const AddExpenseSheet = forwardRef<AddExpenseSheetHandle>((_props, ref) => {
@@ -101,9 +93,6 @@ export const AddExpenseSheet = forwardRef<AddExpenseSheetHandle>((_props, ref) =
   const canAdd = !isNaN(parsedAmount) && parsedAmount > 0;
   const dotUsed = amount.includes('.');
   const currentCategory = categoryById(categoryId);
-  const iconId = (BUILTIN_ICON_IDS as readonly string[]).includes(categoryId)
-    ? categoryId
-    : 'custom';
 
   const onKey = useCallback((ch: string) => {
     setAmount(prev => {
@@ -249,7 +238,7 @@ export const AddExpenseSheet = forwardRef<AddExpenseSheetHandle>((_props, ref) =
           amount={parsedAmount || 0}
           currency={currency}
           categoryColor={currentCategory.color}
-          iconId={iconId}
+          categoryId={categoryId}
           theme={theme}
         />
 
@@ -262,10 +251,10 @@ export const AddExpenseSheet = forwardRef<AddExpenseSheetHandle>((_props, ref) =
         />
 
         <DateStepper
-          label={dateLabel(dateOffset)}
+          label={dayOffsetLabel(dateOffset)}
           canGoForward={dateOffset > 0}
           onForward={() => setDateOffset(o => Math.max(0, o - 1))}
-          onBack={() => setDateOffset(o => Math.min(MAX_PAST_OFFSET, o + 1))}
+          onBack={() => setDateOffset(o => o + 1)}
           theme={theme}
         />
 

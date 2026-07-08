@@ -1,15 +1,15 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
-import { CategoryIcon } from './CategoryIcon';
 import { splitMoney } from '../lib/format';
+import { getCategoryConfig } from '../theme/categories';
 import { Theme, font } from '../theme/tokens';
 
 interface Props {
   amount: number;
   currency: string;
   categoryColor: string;
-  iconId: string;
+  categoryId: string;
   theme: Theme;
 }
 
@@ -18,9 +18,10 @@ export function AmountDisplay({
   amount,
   currency,
   categoryColor,
-  iconId,
+  categoryId,
   theme,
 }: Props) {
+  const { icon: CategoryGlyph } = getCategoryConfig(categoryId);
   const { whole, cents } = splitMoney(amount, currency);
 
   return (
@@ -36,7 +37,7 @@ export function AmountDisplay({
             </Defs>
             <Circle cx={32} cy={32} r={32} fill="url(#heroGrad)" />
           </Svg>
-          <CategoryIcon iconId={iconId} color="#fff" size={28} strokeWidth={1.6} />
+          <CategoryGlyph size={28} color="#fff" />
         </View>
       </View>
 

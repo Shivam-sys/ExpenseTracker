@@ -1,14 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useExpenseStore } from '../store/expenseStore';
-import { DATE_LABELS, Expense, ExpenseDraft } from '../store/types';
-import {
-  BASE_CATEGORIES,
-  BUILTIN_ICON_IDS,
-  CategoryDef,
-  CategoryId,
-  categoryTint,
-} from '../theme/tokens';
-import { money } from '../lib/format';
+import { Expense, ExpenseDraft } from '../store/types';
+import { CategoryDef, CategoryId, categoryTint } from '../theme/tokens';
+import { CATEGORY_LIST } from '../theme/categories';
+import { dayOffsetLabel, money } from '../lib/format';
 import {
   createExpense,
   deleteExpenseRow,
@@ -24,7 +19,6 @@ export interface DisplayExpense {
   label: string;
   color: string;
   tint: string;
-  iconId: string; // one of BUILTIN_ICON_IDS or 'custom'
   amountLabel: string;
   categoryId: CategoryId;
   amount: number;
@@ -99,7 +93,7 @@ export function useExpenses() {
 
   // ── derived data (unchanged from before) ─────────────────────────────────
   const categories: CategoryDef[] = useMemo(
-    () => [...BASE_CATEGORIES, ...customCategories],
+    () => [...CATEGORY_LIST, ...customCategories],
     [customCategories],
   );
 
@@ -123,22 +117,16 @@ export function useExpenses() {
   const dayGroups: DayGroup[] = useMemo(() => {
     const map = new Map<number, DayGroup>();
     entries.forEach(e => {
-      const label = DATE_LABELS[e.dayOffset] ?? `${e.dayOffset} days ago`;
+      const label = dayOffsetLabel(e.dayOffset);
       if (!map.has(e.dayOffset)) {
         map.set(e.dayOffset, { offset: e.dayOffset, label, entries: [] });
       }
       const cat = categoryById(e.categoryId);
-      const iconId = (BUILTIN_ICON_IDS as readonly string[]).includes(
-        e.categoryId as string,
-      )
-        ? (e.categoryId as string)
-        : 'custom';
       map.get(e.dayOffset)!.entries.push({
         id: e.id,
         label: e.label,
         color: cat.color,
         tint: categoryTint(cat.color, dark),
-        iconId,
         amountLabel: money(e.amount, currency),
         categoryId: e.categoryId,
         amount: e.amount,

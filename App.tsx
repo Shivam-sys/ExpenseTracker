@@ -15,6 +15,7 @@ import {
   Theme as NavTheme,
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { IconContext } from 'phosphor-react-native';
 import { ExpensesListScreen } from './src/screens/ExpensesListScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
 import { useExpenseStore } from './src/store/expenseStore';
@@ -36,21 +37,23 @@ function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <BottomSheetModalProvider>
-          <StatusBar
-            barStyle={dark ? 'light-content' : 'dark-content'}
-            translucent
-            backgroundColor="transparent"
-          />
-          <NavigationContainer theme={navTheme}>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="Home" component={ExpensesListScreen} />
-              <Stack.Screen name="Profile" component={ProfileScreen} />
-            </Stack.Navigator>
-          </NavigationContainer>
-        </BottomSheetModalProvider>
-      </SafeAreaProvider>
+      <IconContext.Provider value={{ weight: 'duotone' }}>
+        <SafeAreaProvider>
+          <BottomSheetModalProvider>
+            <StatusBar
+              barStyle={dark ? 'light-content' : 'dark-content'}
+              translucent
+              backgroundColor="transparent"
+            />
+            <NavigationContainer theme={navTheme}>
+              <Stack.Navigator screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="Home" component={ExpensesListScreen} />
+                <Stack.Screen name="Profile" component={ProfileScreen} />
+              </Stack.Navigator>
+            </NavigationContainer>
+          </BottomSheetModalProvider>
+        </SafeAreaProvider>
+      </IconContext.Provider>
     </GestureHandlerRootView>
   );
 }

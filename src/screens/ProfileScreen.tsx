@@ -34,10 +34,10 @@ export function ProfileScreen({ navigation }: { navigation: any }) {
 
       <View style={styles.identity}>
         <View style={[styles.bigAvatar, { backgroundColor: theme.avatarBg }]}>
-          <Text style={styles.bigAvatarText}>JD</Text>
+          <Text style={styles.bigAvatarText}>SK</Text>
         </View>
-        <Text style={[styles.name, { color: theme.text }]}>Jordan Doe</Text>
-        <Text style={[styles.email, { color: theme.textMuted45 }]}>jordan@example.com</Text>
+        <Text style={[styles.name, { color: theme.text }]}>Shivam K</Text>
+        <Text style={[styles.email, { color: theme.textMuted45 }]}>shivam@example.com</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.body}>

@@ -49,7 +49,9 @@ export function offsetToDate(offset: number): string {
 }
 
 export function dateToOffset(dateStr: string): number {
-  const [y, m, d] = dateStr.split('-').map(Number);
+  // Column may serialize as "YYYY-MM-DD" or a full timestamp "YYYY-MM-DDT…";
+  // only the date part is meaningful here.
+  const [y, m, d] = dateStr.slice(0, 10).split('-').map(Number);
   const then = new Date(y, m - 1, d);
   const today = new Date();
   today.setHours(0, 0, 0, 0);

@@ -28,24 +28,6 @@ export interface CategoryDef {
   custom?: boolean;
 }
 
-export const BASE_CATEGORIES: CategoryDef[] = [
-  { id: 'coffee', label: 'Coffee', color: '#2f6f4f', border: 'rgba(47,111,79,.25)' },
-  { id: 'food', label: 'Food', color: '#e0703f', border: 'rgba(224,112,63,.25)' },
-  { id: 'transit', label: 'Transit', color: '#3d6fe0', border: 'rgba(61,111,224,.25)' },
-  { id: 'fun', label: 'Fun', color: '#caa23d', border: 'rgba(202,162,61,.25)' },
-  { id: 'bills', label: 'Bills', color: '#9b5de5', border: 'rgba(155,93,229,.25)' },
-  { id: 'shopping', label: 'Shopping', color: '#d6558c', border: 'rgba(214,85,140,.25)' },
-];
-
-export const BUILTIN_ICON_IDS = [
-  'coffee',
-  'food',
-  'transit',
-  'fun',
-  'bills',
-  'shopping',
-] as const;
-
 export const NEW_CATEGORY_COLOR_POOL = [
   '#2f8fbf',
   '#a86b32',

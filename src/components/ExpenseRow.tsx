@@ -10,7 +10,8 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { CategoryIcon, TrashIcon, ChevronIcon } from './CategoryIcon';
+import { TrashIcon, ChevronIcon } from './CategoryIcon';
+import { getCategoryConfig } from '../theme/categories';
 import { DisplayExpense } from '../hooks/useExpenses';
 import { DELETE_RED, DURATIONS, EASE, SPRING, Theme, font } from '../theme/tokens';
 
@@ -27,6 +28,7 @@ interface Props {
 }
 
 export function ExpenseRow({ entry, theme, onPress, onDelete }: Props) {
+  const { icon: CategoryGlyph, iconColor } = getCategoryConfig(entry.categoryId);
   const tx = useSharedValue(0);
   const base = useSharedValue(0); // committed position: 0 (closed) or -80 (open)
   const pressed = useSharedValue(0);
@@ -106,7 +108,7 @@ export function ExpenseRow({ entry, theme, onPress, onDelete }: Props) {
         <Animated.View style={[styles.row, { backgroundColor: theme.cardBg }, rowStyle]}>
           <Animated.View style={[StyleSheet.absoluteFill, styles.pressOverlay, pressStyle]} />
           <View style={[styles.iconTile, { backgroundColor: entry.tint }]}>
-            <CategoryIcon iconId={entry.iconId} color={entry.color} size={18} />
+            <CategoryGlyph size={20} color={iconColor} />
           </View>
           <Text style={[styles.label, { color: theme.text }]} numberOfLines={1}>
             {entry.label}

@@ -25,8 +25,6 @@ export const CURRENCIES: Currency[] = [
   { code: 'AUD', name: 'Australian Dollar', symbol: '$' },
 ];
 
-export const DATE_LABELS = ['Today', 'Yesterday', '2 days ago'];
-
 /** Draft payload the Add/Edit sheet submits back to the data layer. */
 export interface ExpenseDraft {
   label: string;
