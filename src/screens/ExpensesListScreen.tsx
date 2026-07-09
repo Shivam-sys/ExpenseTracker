@@ -54,7 +54,7 @@ export function ExpensesListScreen({ navigation }: { navigation: any }) {
             style={styles.avatar}
             accessibilityRole="button"
             accessibilityLabel="Open profile">
-            <Text style={styles.avatarText}>JD</Text>
+            <Text style={styles.avatarText}>SK</Text>
           </Pressable>
         </View>
 
@@ -190,10 +190,15 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     backgroundColor: 'rgba(255,255,255,.14)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,.35)',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: 'rgb(5, 69, 9)',
+    borderColor: 'rgba(255, 255, 255, 0.35)',
+    borderWidth: 1.5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,                // real depth instead of a glow
   },
   avatarText: {
     color: '#fff',
