@@ -1,12 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import React, { useEffect } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   interpolateColor,
   useAnimatedStyle,
@@ -16,7 +9,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import {
-  BRAND,
   CategoryDef,
   DURATIONS,
   EASE,
@@ -24,13 +16,13 @@ import {
   font,
   hexToRgba,
 } from '../theme/tokens';
-import { getCategoryConfig } from '../theme/categories';
+import { iconFor } from '../theme/categories';
 
 interface Props {
   categories: CategoryDef[];
   selectedId: string;
   onSelect: (id: string) => void;
-  onAddCategory: (label: string) => void;
+  onAddPress: () => void;
   theme: Theme;
 }
 
@@ -38,81 +30,50 @@ export function CategoryPills({
   categories,
   selectedId,
   onSelect,
-  onAddCategory,
+  onAddPress,
   theme,
 }: Props) {
-  const [adding, setAdding] = useState(false);
-  const [name, setName] = useState('');
-
-  const save = () => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    onAddCategory(trimmed);
-    setName('');
-    setAdding(false);
-  };
-
   return (
     <View style={styles.wrap}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}>
-        {categories.map(cat => (
-          <Pill
-            key={cat.id}
-            cat={cat}
-            selected={cat.id === selectedId}
-            theme={theme}
-            onPress={() => onSelect(cat.id)}
-          />
-        ))}
+      <Pressable
+        onPress={onAddPress}
+        style={styles.addBtn}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel="Add category">
+        <Text style={[styles.addBtnText, { color: theme.textMuted55 }]}>
+          + Add category
+        </Text>
+      </Pressable>
 
-        {adding ? (
-          <View
-            style={[
-              styles.addInputWrap,
-              { backgroundColor: theme.inputBg, borderColor: theme.border },
-            ]}>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              onSubmitEditing={save}
-              placeholder="New category"
-              placeholderTextColor={theme.textMuted45}
-              autoFocus
-              style={[styles.addInput, { color: theme.text }]}
+      <View style={styles.rowWrap}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}>
+          {categories.map(cat => (
+            <Pill
+              key={cat.id}
+              cat={cat}
+              selected={cat.id === selectedId}
+              theme={theme}
+              onPress={() => onSelect(cat.id)}
             />
-            <Pressable
-              onPress={save}
-              style={[
-                styles.saveBtn,
-                { backgroundColor: name.trim() ? BRAND : theme.border },
-              ]}>
-              <Text style={styles.saveTick}>✓</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <Pressable
-            onPress={() => setAdding(true)}
-            style={[styles.newChip, { borderColor: theme.dashedBorder }]}>
-            <Text style={[styles.newPlus, { color: theme.textMuted55 }]}>+</Text>
-            <Text style={[styles.newLabel, { color: theme.textMuted55 }]}>New</Text>
-          </Pressable>
-        )}
-      </ScrollView>
+          ))}
+        </ScrollView>
 
-      {/* Right-edge fade mask signalling more content */}
-      <View style={styles.fade} pointerEvents="none">
-        <Svg width="28" height="100%">
-          <Defs>
-            <LinearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
-              <Stop offset="0" stopColor={theme.scrollFadeTo} stopOpacity={0} />
-              <Stop offset="1" stopColor={theme.scrollFadeTo} stopOpacity={1} />
-            </LinearGradient>
-          </Defs>
-          <Rect x="0" y="0" width="28" height="100%" fill="url(#fade)" />
-        </Svg>
+        {/* Right-edge fade mask signalling more content */}
+        <View style={styles.fade} pointerEvents="none">
+          <Svg width="28" height="100%">
+            <Defs>
+              <LinearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+                <Stop offset="0" stopColor={theme.scrollFadeTo} stopOpacity={0} />
+                <Stop offset="1" stopColor={theme.scrollFadeTo} stopOpacity={1} />
+              </LinearGradient>
+            </Defs>
+            <Rect x="0" y="0" width="28" height="100%" fill="url(#fade)" />
+          </Svg>
+        </View>
       </View>
     </View>
   );
@@ -132,7 +93,8 @@ function Pill({
   const sel = useSharedValue(selected ? 1 : 0);
   const scale = useSharedValue(1);
 
-  const { icon: CategoryGlyph, iconColor } = getCategoryConfig(cat.id);
+  const CategoryGlyph = iconFor(cat.icon);
+  const iconColor = cat.color;
   const activeBg = hexToRgba(cat.color, theme.dark ? 0.24 : 0.12);
   const inactiveBorder = theme.dark ? theme.border : cat.border;
 
@@ -167,7 +129,11 @@ function Pill({
     <Pressable onPress={onPress} style={styles.hit}>
       <Animated.View style={[styles.pill, pillStyle]}>
         <CategoryGlyph size={16} color={iconColor} />
-        <Text style={[styles.pillLabel, { color: theme.text }]}>{cat.label}</Text>
+        <Text
+          style={[styles.pillLabel, { color: theme.text }]}
+          numberOfLines={1}>
+          {cat.label}
+        </Text>
       </Animated.View>
     </Pressable>
   );
@@ -175,8 +141,20 @@ function Pill({
 
 const styles = StyleSheet.create({
   wrap: {
+    marginTop: 6,
+  },
+  addBtn: {
+    alignSelf: 'flex-end',
+    minHeight: 32,
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  addBtnText: {
+    fontSize: 13.5,
+    fontFamily: font(500),
+  },
+  rowWrap: {
     position: 'relative',
-    marginTop: 14,
   },
   fade: {
     position: 'absolute',
@@ -208,56 +186,6 @@ const styles = StyleSheet.create({
   pillLabel: {
     fontSize: 13.5,
     fontFamily: font(500),
-  },
-  newChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    minHeight: 44,
-    marginLeft: 4,
-    alignSelf: 'center',
-  },
-  newPlus: {
-    fontSize: 15,
-    fontFamily: font(600),
-    lineHeight: 18,
-  },
-  newLabel: {
-    fontSize: 13.5,
-    fontFamily: font(500),
-  },
-  addInputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    paddingLeft: 12,
-    paddingRight: 6,
-    minHeight: 44,
-    marginLeft: 4,
-    alignSelf: 'center',
-  },
-  addInput: {
-    width: 104,
-    fontSize: 13.5,
-    fontFamily: font(500),
-    padding: 0,
-  },
-  saveBtn: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  saveTick: {
-    color: '#fff',
-    fontSize: 13,
+    maxWidth: 140,
   },
 });

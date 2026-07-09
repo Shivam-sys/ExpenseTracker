@@ -14,7 +14,7 @@ const TABLE_URL = `${SUPABASE_URL}/rest/v1/expenses`;
 interface ExpenseRow {
   id: number;
   created_at: string;
-  name: string;
+  name: string | null; // optional user note, surfaced in the UI as "note"
   amount: number | string; // numeric can serialize as string
   category: string;
   expense_date: string; // YYYY-MM-DD
@@ -61,7 +61,7 @@ export function dateToOffset(dateStr: string): number {
 function rowToExpense(row: ExpenseRow): Expense {
   return {
     id: row.id,
-    label: row.name,
+    note: row.name ?? '',
     categoryId: row.category,
     amount: Number(row.amount),
     dayOffset: dateToOffset(row.expense_date),
@@ -70,7 +70,9 @@ function rowToExpense(row: ExpenseRow): Expense {
 
 function draftToBody(draft: ExpenseDraft) {
   return {
-    name: draft.label,
+    // '' rather than null so blank notes also save before the migration
+    // relaxing the column's NOT NULL has been applied
+    name: draft.note,
     amount: draft.amount,
     category: draft.categoryId,
     expense_date: offsetToDate(draft.dayOffset),

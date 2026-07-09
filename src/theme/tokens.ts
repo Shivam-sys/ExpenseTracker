@@ -25,17 +25,12 @@ export interface CategoryDef {
   label: string;
   color: string;
   border: string; // inactive border tint
+  /** icon key from categories.icon, resolved via ICON_MAP */
+  icon?: string;
+  /** palette key from categories.color_key (see CATEGORY_COLOR_PALETTE) */
+  colorKey?: string;
   custom?: boolean;
 }
-
-export const NEW_CATEGORY_COLOR_POOL = [
-  '#2f8fbf',
-  '#a86b32',
-  '#5c9e5c',
-  '#c2542e',
-  '#5c6bc0',
-  '#7a7a7a',
-];
 
 // ── Radii ────────────────────────────────────────────────────────────────────
 export const RADIUS = { card: 14, pill: 999, sheet: 32 } as const;

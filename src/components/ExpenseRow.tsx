@@ -11,7 +11,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { TrashIcon, ChevronIcon } from './CategoryIcon';
-import { getCategoryConfig } from '../theme/categories';
+import { iconFor } from '../theme/categories';
 import { DisplayExpense } from '../hooks/useExpenses';
 import { DELETE_RED, DURATIONS, EASE, SPRING, Theme, font } from '../theme/tokens';
 
@@ -28,7 +28,8 @@ interface Props {
 }
 
 export function ExpenseRow({ entry, theme, onPress, onDelete }: Props) {
-  const { icon: CategoryGlyph, iconColor } = getCategoryConfig(entry.categoryId);
+  const CategoryGlyph = iconFor(entry.icon);
+  const iconColor = entry.color;
   const tx = useSharedValue(0);
   const base = useSharedValue(0); // committed position: 0 (closed) or -80 (open)
   const pressed = useSharedValue(0);
@@ -110,9 +111,18 @@ export function ExpenseRow({ entry, theme, onPress, onDelete }: Props) {
           <View style={[styles.iconTile, { backgroundColor: entry.tint }]}>
             <CategoryGlyph size={20} color={iconColor} />
           </View>
-          <Text style={[styles.label, { color: theme.text }]} numberOfLines={1}>
-            {entry.label}
-          </Text>
+          <View style={styles.textCol}>
+            <Text style={[styles.label, { color: theme.text }]} numberOfLines={1}>
+              {entry.label}
+            </Text>
+            {entry.note !== '' && (
+              <Text
+                style={[styles.note, { color: theme.textMuted45 }]}
+                numberOfLines={1}>
+                {entry.note}
+              </Text>
+            )}
+          </View>
           <Text style={[styles.amount, { color: theme.text }]}>{entry.amountLabel}</Text>
           <View style={styles.chevron}>
             <ChevronIcon dir="right" color={theme.text} size={12} strokeWidth={1.6} />
@@ -169,10 +179,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  label: {
+  textCol: {
     flex: 1,
+  },
+  label: {
     fontSize: 15.5,
+    fontFamily: font(600),
+  },
+  note: {
+    fontSize: 13,
     fontFamily: font(500),
+    marginTop: 1,
   },
   amount: {
     fontSize: 16,

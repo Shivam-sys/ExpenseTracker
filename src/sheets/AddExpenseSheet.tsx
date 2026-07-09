@@ -1,6 +1,7 @@
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
+  BottomSheetTextInput,
   BottomSheetView,
   useBottomSheetTimingConfigs,
 } from '@gorhom/bottom-sheet';
@@ -23,9 +24,12 @@ import { TrashIcon } from '../components/CategoryIcon';
 import { CategoryPills } from '../components/CategoryPills';
 import { DateStepper } from '../components/DateStepper';
 import { Keypad } from '../components/Keypad';
+import { NewCategoryModal } from '../components/NewCategoryModal';
 import { DisplayExpense, useExpenses } from '../hooks/useExpenses';
 import { useHaptics } from '../hooks/useHaptics';
 import { dayOffsetLabel } from '../lib/format';
+import { NOTE_MAX_LENGTH } from '../store/types';
+import { ColorKey } from '../theme/categories';
 import {
   BRAND,
   DELETE_RED,
@@ -56,11 +60,13 @@ export const AddExpenseSheet = forwardRef<AddExpenseSheetHandle>((_props, ref) =
   } = useExpenses();
 
   const [amount, setAmount] = useState('');
+  const [note, setNote] = useState('');
   const [categoryId, setCategoryId] = useState('coffee');
   const [dateOffset, setDateOffset] = useState(0);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [errorShown, setErrorShown] = useState(false);
+  const [categoryModalVisible, setCategoryModalVisible] = useState(false);
 
   const doneScale = useSharedValue(1);
   const doneShakeX = useSharedValue(0);
@@ -74,6 +80,7 @@ export const AddExpenseSheet = forwardRef<AddExpenseSheetHandle>((_props, ref) =
     presentAdd: () => {
       setEditingId(null);
       setAmount('');
+      setNote('');
       setCategoryId('coffee');
       setDateOffset(0);
       setErrorShown(false);
@@ -82,6 +89,7 @@ export const AddExpenseSheet = forwardRef<AddExpenseSheetHandle>((_props, ref) =
     presentEdit: (entry: DisplayExpense) => {
       setEditingId(entry.id);
       setAmount(String(entry.amount));
+      setNote(entry.note);
       setCategoryId(entry.categoryId as string);
       setDateOffset(entry.dayOffset);
       setErrorShown(false);
@@ -115,12 +123,19 @@ export const AddExpenseSheet = forwardRef<AddExpenseSheetHandle>((_props, ref) =
     [haptic],
   );
 
-  const onAddCategory = useCallback(
-    (label: string) => {
-      const cat = addCategory(label);
+  /**
+   * Creation runs from the modal; on success the new category lands in the
+   * pill row (store insert) and is auto-selected. Duplicate errors are
+   * rethrown so the modal shows them inline and stays open.
+   */
+  const onCreateCategory = useCallback(
+    async (name: string, colorKey: ColorKey) => {
+      const cat = await addCategory(name, colorKey);
       setCategoryId(cat.id as string);
+      setCategoryModalVisible(false);
+      haptic('success');
     },
-    [addCategory],
+    [addCategory, haptic],
   );
 
   const runShake = useCallback(() => {
@@ -145,7 +160,7 @@ export const AddExpenseSheet = forwardRef<AddExpenseSheetHandle>((_props, ref) =
       withTiming(1, { duration: DURATIONS.bounce, easing: EASE }),
     );
     const draft = {
-      label: currentCategory.label,
+      note: note.trim(),
       categoryId,
       amount: parsedAmount,
       dayOffset: dateOffset,
@@ -168,7 +183,7 @@ export const AddExpenseSheet = forwardRef<AddExpenseSheetHandle>((_props, ref) =
     canAdd,
     submitting,
     doneScale,
-    currentCategory,
+    note,
     categoryId,
     parsedAmount,
     dateOffset,
@@ -207,6 +222,7 @@ export const AddExpenseSheet = forwardRef<AddExpenseSheetHandle>((_props, ref) =
   const isEditing = editingId != null;
 
   return (
+    <>
     <BottomSheetModal
       ref={modalRef}
       enableDynamicSizing
@@ -238,7 +254,7 @@ export const AddExpenseSheet = forwardRef<AddExpenseSheetHandle>((_props, ref) =
           amount={parsedAmount || 0}
           currency={currency}
           categoryColor={currentCategory.color}
-          categoryId={categoryId}
+          categoryIcon={currentCategory.icon}
           theme={theme}
         />
 
@@ -246,8 +262,25 @@ export const AddExpenseSheet = forwardRef<AddExpenseSheetHandle>((_props, ref) =
           categories={categories}
           selectedId={categoryId}
           onSelect={onSelectCategory}
-          onAddCategory={onAddCategory}
+          onAddPress={() => setCategoryModalVisible(true)}
           theme={theme}
+        />
+
+        <BottomSheetTextInput
+          value={note}
+          onChangeText={setNote}
+          placeholder="Add a note (optional)"
+          placeholderTextColor={theme.textMuted45}
+          maxLength={NOTE_MAX_LENGTH}
+          returnKeyType="done"
+          style={[
+            styles.noteInput,
+            {
+              color: theme.text,
+              backgroundColor: theme.inputBg,
+              borderColor: theme.border,
+            },
+          ]}
         />
 
         <DateStepper
@@ -285,6 +318,15 @@ export const AddExpenseSheet = forwardRef<AddExpenseSheetHandle>((_props, ref) =
         </Text>
       </BottomSheetView>
     </BottomSheetModal>
+
+    <NewCategoryModal
+      visible={categoryModalVisible}
+      existingNames={categories.map(c => c.label)}
+      onCreate={onCreateCategory}
+      onClose={() => setCategoryModalVisible(false)}
+      theme={theme}
+    />
+    </>
   );
 });
 
@@ -323,6 +365,16 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.4,
     marginBottom: 2,
+  },
+  noteInput: {
+    borderWidth: 1.5,
+    borderRadius: RADIUS.card,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    fontSize: 14.5,
+    fontFamily: font(500),
+    marginTop: 4,
+    marginBottom: 4,
   },
   done: {
     marginTop: 14,

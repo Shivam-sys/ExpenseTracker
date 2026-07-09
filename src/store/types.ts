@@ -2,7 +2,8 @@ import { CategoryId } from '../theme/tokens';
 
 export interface Expense {
   id: number;
-  label: string;
+  /** optional user note (the `name` column in Supabase), '' when blank */
+  note: string;
   categoryId: CategoryId;
   amount: number;
   /** 0 = today, 1 = yesterday, 2 = two days ago … */
@@ -27,8 +28,12 @@ export const CURRENCIES: Currency[] = [
 
 /** Draft payload the Add/Edit sheet submits back to the data layer. */
 export interface ExpenseDraft {
-  label: string;
+  note: string;
   categoryId: CategoryId;
   amount: number;
   dayOffset: number;
 }
+
+/** Max lengths enforced client-side; mirrored by DB constraints. */
+export const NOTE_MAX_LENGTH = 100;
+export const CATEGORY_NAME_MAX_LENGTH = 20;

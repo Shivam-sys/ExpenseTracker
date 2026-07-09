@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { CategoryDef, NEW_CATEGORY_COLOR_POOL } from '../theme/tokens';
+import { CategoryDef } from '../theme/tokens';
 import { Expense } from './types';
 
 /**
@@ -21,7 +21,9 @@ interface ExpenseState {
   /** label of an entry re-inserted after a failed DELETE (drives the toast) */
   restoredLabel: string | null;
 
-  customCategories: CategoryDef[];
+  /** full category list from Supabase (seeded + custom); empty until the
+   *  first fetch resolves — this app is online-first, no local fallback */
+  categories: CategoryDef[];
   currency: string;
   darkMode: boolean;
 
@@ -34,12 +36,13 @@ interface ExpenseState {
   setOffline: (v: boolean) => void;
   setRestoredLabel: (label: string | null) => void;
 
-  addCategory: (label: string) => CategoryDef;
+  setCategories: (cats: CategoryDef[]) => void;
+  insertCategory: (cat: CategoryDef) => void;
   setCurrency: (code: string) => void;
   toggleDarkMode: () => void;
 }
 
-export const useExpenseStore = create<ExpenseState>((set, get) => ({
+export const useExpenseStore = create<ExpenseState>(set => ({
   entries: [],
   isLoading: false,
   hasLoaded: false,
@@ -47,7 +50,7 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
   offline: false,
   restoredLabel: null,
 
-  customCategories: [],
+  categories: [],
   currency: 'INR',
   darkMode: false,
 
@@ -62,22 +65,9 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
   setOffline: v => set({ offline: v }),
   setRestoredLabel: label => set({ restoredLabel: label }),
 
-  addCategory: label => {
-    const { customCategories } = get();
-    const color =
-      NEW_CATEGORY_COLOR_POOL[
-        customCategories.length % NEW_CATEGORY_COLOR_POOL.length
-      ];
-    const cat: CategoryDef = {
-      id: 'custom-' + Date.now(),
-      label,
-      color,
-      border: color + '40',
-      custom: true,
-    };
-    set(s => ({ customCategories: [...s.customCategories, cat] }));
-    return cat;
-  },
+  setCategories: cats => set({ categories: cats }),
+  insertCategory: cat =>
+    set(s => ({ categories: [...s.categories, cat] })),
 
   setCurrency: code => set({ currency: code }),
   toggleDarkMode: () => set(s => ({ darkMode: !s.darkMode })),

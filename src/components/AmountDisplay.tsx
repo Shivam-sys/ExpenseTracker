@@ -2,14 +2,14 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { splitMoney } from '../lib/format';
-import { getCategoryConfig } from '../theme/categories';
+import { iconFor } from '../theme/categories';
 import { Theme, font } from '../theme/tokens';
 
 interface Props {
   amount: number;
   currency: string;
   categoryColor: string;
-  categoryId: string;
+  categoryIcon?: string;
   theme: Theme;
 }
 
@@ -18,10 +18,10 @@ export function AmountDisplay({
   amount,
   currency,
   categoryColor,
-  categoryId,
+  categoryIcon,
   theme,
 }: Props) {
-  const { icon: CategoryGlyph } = getCategoryConfig(categoryId);
+  const CategoryGlyph = iconFor(categoryIcon);
   const { whole, cents } = splitMoney(amount, currency);
 
   return (
