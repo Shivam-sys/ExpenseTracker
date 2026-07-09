@@ -1,3 +1,4 @@
+import { Appearance } from 'react-native';
 import { create } from 'zustand';
 import { CategoryDef } from '../theme/tokens';
 import { Expense } from './types';
@@ -52,7 +53,7 @@ export const useExpenseStore = create<ExpenseState>(set => ({
 
   categories: [],
   currency: 'INR',
-  darkMode: false,
+  darkMode: Appearance.getColorScheme() === 'dark',
 
   setEntries: entries => set({ entries }),
   insertEntry: entry => set(s => ({ entries: [...s.entries, entry] })),
